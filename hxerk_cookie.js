@@ -1,13 +1,13 @@
 /*
-脚本名称：鸿星尔克自动抓包
+脚本名称：鸿星尔克自动抓包 (多账号合并版)
 脚本作者：Assistant
-适用平台：Quantumult X, Loon, Surge, Shadowrocket
 功能说明：
-打开微信小程序“鸿星尔克”，点击“会员”或“积分明细”触发。
-会自动抓取 member_id, enterprise_id, unionid, openid 等参数，
-并格式化为青龙面板可用的 JSON 格式。
+1. 自动抓取鸿星尔克账号参数。
+2. 支持多账号：抓取不同账号时，会自动合并到同一个列表中。
+3. 输出格式直接为青龙变量 ERKE_JSON 可用的 JSON 数组。
 
 [rewrite_local]
+# 注意：请确保 GitHub 上的文件名和这里引用的文件名一致
 ^https:\/\/hope\.demogic\.com\/gic-wx-app\/.*(integral_record|member_sign)\.json url script-request-body https://raw.githubusercontent.com/mikasangF1/My-Scripts/main/hxerk_cookie.js
 
 [mitm]
@@ -28,12 +28,10 @@ async function captureCookie() {
 
     try {
         let params = {};
-        
         // 解析请求体
         if (body.startsWith("{") && body.endsWith("}")) {
             params = JSON.parse(body);
         } else {
-            // 处理 form-urlencoded
             const pairs = body.split('&');
             pairs.forEach(pair => {
                 const [key, value] = pair.split('=');
@@ -42,8 +40,8 @@ async function captureCookie() {
         }
 
         // 提取核心数据
-        const accountInfo = {
-            "account_name": "我的账号(请重命名)",
+        const currentAccount = {
+            "account_name": `账号_${params.memberId || 'Unknown'}`, // 默认用ID做备注，可手动改
             "member_id": params.memberId,
             "enterprise_id": params.enterpriseId,
             "unionid": params.unionid,
@@ -51,32 +49,47 @@ async function captureCookie() {
             "wx_openid": params.wxOpenid || params.wx_openid
         };
 
-        // 验证关键数据是否存在
-        if (accountInfo.member_id && accountInfo.openid) {
-            const jsonString = JSON.stringify(accountInfo, null, 2);
-            
-            // 打印日志
-            console.log(`\n🔔 鸿星尔克抓包数据:\n${jsonString}`);
+        if (currentAccount.member_id && currentAccount.openid) {
+            // === 核心逻辑：读取旧缓存并合并 ===
+            // 读取之前的账号列表
+            let historyList = [];
+            const historyStr = $.getdata('ERKE_TOKEN_LIST');
+            if (historyStr) {
+                try {
+                    historyList = JSON.parse(historyStr);
+                } catch (e) {}
+            }
 
-            // 格式化通知内容，方便直接复制
-            // 注意：QX 通知有字数限制，过长可能被截断，建议去日志复制
-            const rawData = JSON.stringify([accountInfo]); // 包裹成数组方便直接填青龙
+            // 检查是否已存在（通过 member_id 判断），存在则更新，不存在则追加
+            const index = historyList.findIndex(u => u.member_id === currentAccount.member_id);
+            if (index > -1) {
+                historyList[index] = currentAccount; // 更新
+                console.log(`更新账号: ${currentAccount.member_id}`);
+            } else {
+                historyList.push(currentAccount); // 新增
+                console.log(`新增账号: ${currentAccount.member_id}`);
+            }
+
+            // 保存回缓存
+            $.setdata(JSON.stringify(historyList), 'ERKE_TOKEN_LIST');
+
+            // === 生成通知 ===
+            const finalJSON = JSON.stringify(historyList); // 压缩成一行，方便复制
             
-            $.msg("鸿星尔克抓包成功 🎉", "数据已生成，请查看日志或复制下方内容", rawData);
+            // 打印日志（格式化显示，方便检查）
+            console.log(`\n🔔 当前已存储 ${historyList.length} 个账号:\n${JSON.stringify(historyList, null, 2)}`);
+
+            // 发送通知
+            $.msg(
+                `鸿星尔克抓包: 第 ${historyList.length} 个`, 
+                `已存入缓存，请复制下方完整 JSON`, 
+                finalJSON
+            );
         }
     } catch (e) {
         console.log("❌ 解析失败: " + e);
     }
 }
 
-// 简易环境适配类
-function Env(name) {
-    return {
-        msg: (title, subtitle, body) => {
-            if (typeof $notify !== "undefined") $notify(title, subtitle, body);
-            console.log(`\n===${name} 通知===\n${title}\n${subtitle}\n${body}`);
-        },
-        logErr: (err) => console.log(`\n❌ ${name} 错误:\n${err}`),
-        done: () => { if (typeof $done !== "undefined") $done(); }
-    };
-}
+// 简易环境适配类 (包含存储功能)
+function Env(t,e){class s{constructor(t){this.env=t}write(t,e){switch(this.env){case"Quantumult X":$prefs.setValueForKey(t,e);break;case"Loon":$persistentStore.write(t,e);break;case"Surge":$persistentStore.write(t,e);break;case"Shadowrocket":$persistentStore.write(t,e)}}read(t){switch(this.env){case"Quantumult X":return $prefs.valueForKey(t);case"Loon":return $persistentStore.read(t);case"Surge":return $persistentStore.read(t);case"Shadowrocket":return $persistentStore.read(t)}}}return new class{constructor(t,e){this.name=t,this.http=new s(this.determineEnv()),this.logs=[],this.startTime=(new Date).getTime(),Object.assign(this,e)}determineEnv(){return"undefined"!=typeof $prefs?"Quantumult X":"undefined"!=typeof $persistentStore?"Loon":"undefined"!=typeof $task?"Shadowrocket":"Node"}getdata(t){return this.http.read(t)}setdata(t,e){return this.http.write(t,e)}msg(e,s,i){if("Quantumult X"===this.determineEnv()&&($notify(e,s,i),console.log(`${e}\n${s}\n${i}`)),"Surge"===this.determineEnv()||"Loon"===this.determineEnv()){$notification.post(e,s,i)}}logErr(t){console.log(`❌ ${this.name} 错误: ${t}`)}done(){const t=(new Date).getTime();console.log(`\n🔔 ${this.name} 运行结束, 耗时 ${(t-this.startTime)/1e3} 秒`),"undefined"!=typeof $done&&$done()}}(t,e)}
