@@ -8,7 +8,7 @@
 并格式化为青龙面板可用的 JSON 格式。
 
 [rewrite_local]
-^https:\/\/hope\.demogic\.com\/gic-wx-app\/.*(integral_record|member_sign)\.json url script-request-body hxerk_cookie.js
+^https:\/\/hope\.demogic\.com\/gic-wx-app\/.*(integral_record|member_sign)\.json url script-request-body https://raw.githubusercontent.com/mikasangF1/My-Scripts/main/hxerk_cookie.js
 
 [mitm]
 hostname = hope.demogic.com
