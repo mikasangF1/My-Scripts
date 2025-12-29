@@ -2,12 +2,11 @@
 脚本名称：鸿星尔克自动抓包 (多账号合并版)
 脚本作者：Assistant
 功能说明：
-1. 自动抓取鸿星尔克账号参数。
+1. 自动抓取鸿星尔克账号参数,我的-积分余额.
 2. 支持多账号：抓取不同账号时，会自动合并到同一个列表中。
 3. 输出格式直接为青龙变量 ERKE_JSON 可用的 JSON 数组。
 
 [rewrite_local]
-# 注意：请确保 GitHub 上的文件名和这里引用的文件名一致
 ^https:\/\/hope\.demogic\.com\/gic-wx-app\/.*(integral_record|member_sign)\.json url script-request-body https://raw.githubusercontent.com/mikasangF1/My-Scripts/main/hxerk_cookie.js
 
 [mitm]
