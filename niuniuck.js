@@ -1,6 +1,5 @@
 /**
  * 脚本名称：牛牛短剧 CK 抓取
- * 脚本作者：Gemini
  * 更新时间：2026-01-28
  * * 使用方法：将此脚本链接添加到 Quantumult X 的 [rewrite_remote] 或 Loon/Surge 的脚本配置中。
  * * [rewrite_local]
