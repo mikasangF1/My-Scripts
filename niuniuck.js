@@ -4,7 +4,7 @@
  * 更新时间：2026-01-28
  * * 使用方法：将此脚本链接添加到 Quantumult X 的 [rewrite_remote] 或 Loon/Surge 的脚本配置中。
  * * [rewrite_local]
- * ^https:\/\/new\.tianjinzhitongdaohe\.com\/api\/v1\/app\/screen\/screenType url script-request-header niuniu_ck.js
+ * ^https:\/\/new\.tianjinzhitongdaohe\.com\/api\/v1\/app\/screen\/screenType url script-request-header https://raw.githubusercontent.com/mikasangF1/My-Scripts/refs/heads/main/niuniuck.js
  * * [mitm]
  * hostname = new.tianjinzhitongdaohe.com
  */
